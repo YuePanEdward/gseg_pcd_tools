@@ -6,7 +6,7 @@
 
  - [x] gesg_pcd2grid: Split a point cloud into several grid point clouds according to a file defining the grids
 
- - [] more to do
+ - [ ] more to do
 ____________________________________________________________________________________
 ![Built](https://img.shields.io/appveyor/ci/gruntjs/grunt.svg)
 ____________________________________________________________________________________
@@ -111,4 +111,4 @@ input point cloud (gray), input grid definition file (yellow)
 
 output point clouds in grids (each grid has its own color)
 
-#### [Link](https://gseg.igp.ethz.ch/)
+#### [GSEG Lab](https://gseg.igp.ethz.ch/)
