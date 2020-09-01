@@ -2,9 +2,13 @@
 
 ## point cloud processing tools:
 
-- [x] gseg_pcdcut: Cut a point cloud defined by a projected bounding polygon
+____________________________________________________________________________________
+![Built](https://img.shields.io/appveyor/ci/gruntjs/grunt.svg)
+____________________________________________________________________________________
 
-- [x] gesg_pcd2grid: Split a point cloud into several grid point clouds according to a file defining the grids
+ - [x] gseg_pcdcut: Cut a point cloud defined by a projected bounding polygon
+
+ - [x] gesg_pcd2grid: Split a point cloud into several grid point clouds according to a file defining the grids
 
 ### How to use:
 
@@ -18,7 +22,7 @@ Optional:
 
 - For *.las data IO: [LibLas](https://github.com/libLAS/libLAS)
 
-If you are on ubuntu 14.04/16.04/18.04, you can simply use the apt to install pcl 1.7
+If you are on ubuntu 14.04/16.04/18.04, you can simply use the apt to install pcl 1.7, as follows:
 
 ```
 echo "install [pcl] 1.7"
