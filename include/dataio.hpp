@@ -62,7 +62,8 @@ class DataIo : public CloudUtility<PointT>
 
     //write pcd point cloud in batch to a folder, using the point cloud index as the filename of the point cloud
     bool batchWritePcdPointClouds(const std::string &folderName,
-                                  std::vector<typename pcl::PointCloud<PointT>::Ptr> &pointClouds)
+                                  std::vector<typename pcl::PointCloud<PointT>::Ptr> &pointClouds,
+                                  bool add_zero_before_index = false)
     {
         if (!boost::filesystem::exists(folderName))
         {
@@ -73,9 +74,12 @@ class DataIo : public CloudUtility<PointT>
         for (int i = 0; i < pointClouds.size(); i++)
         {
             ostringstream oss;
-            oss.setf(ios::right);
-            oss.fill('0');
-            oss.width(4);
+            if (add_zero_before_index)
+            {
+                oss.setf(ios::right);
+                oss.fill('0');
+                oss.width(4);
+            }
             oss << i + 1;
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
