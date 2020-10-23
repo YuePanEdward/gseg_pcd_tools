@@ -45,12 +45,13 @@ int main(int argc, char **argv)
     CloudUtility<Point_T> cu;
 
     pcl::PointCloud<Point_T>::Ptr cloud_in(new pcl::PointCloud<Point_T>);
+    pcl::PointCloud<Point_T>::Ptr cloud_plane(new pcl::PointCloud<Point_T>);
     pcl::PointCloud<Point_T>::Ptr polygon_in(new pcl::PointCloud<Point_T>);
     pcl::PointCloud<Point_T>::Ptr polygon_projected(new pcl::PointCloud<Point_T>);
     pcl::PointCloud<Point_T>::Ptr cloud_cut(new pcl::PointCloud<Point_T>);
 
     io.readPcdPointCloud(pointcloud_file_in, cloud_in); //import the point cloud waiting for cutting
-
+    
     io.readTxtPointCloud(bounding_polygon_file, polygon_in); //import the vertices of the bounding polygon
 
     pcl::ModelCoefficients::Ptr plane_coeff(new pcl::ModelCoefficients());
@@ -61,13 +62,18 @@ int main(int argc, char **argv)
         if (!cu.fitPlane(polygon_in, plane_coeff, 1e-4)) //0.1 mm
             return 0;
     }
+    
+    cu.projectCloud2Plane(polygon_in, plane_coeff, polygon_projected); //project the polygon vertices to the ref. plane
+    
+    cu.cutDist2Plane(cloud_in, plane_coeff, cloud_plane); //pre-cut the point cloud of close to the ref. plane
+	
+	  cloud_in.reset(new pcl::PointCloud<Point_T>()); //free memory
 
-    std::vector<float> proj_dist_list;
-    cu.projectCloud2Plane(polygon_in, plane_coeff, polygon_projected, proj_dist_list); //project the polygon vertices to the ref. plane
-
-    cu.cutHull(cloud_in, polygon_projected, cloud_cut); //do the cutting
+    cu.cutHull(cloud_plane, polygon_projected, cloud_cut); //do the cutting
 
     io.writePcdPointCloud(pointcloud_file_out, cloud_cut); //output the point cloud after cutting
+    
+    //system("pause");
 
     return 1;
 }
