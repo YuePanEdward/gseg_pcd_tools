@@ -1,9 +1,16 @@
 
 function D = gseg_analyze_pcd_grid(sourcelst,refplane,celldef)
-
+% gseg_analyze_pcd_grid: a function for analyzing each point cloud grid 
+% with regard to the scanner and the wall
+% inputs: 
+% - sourcelst: file path list
+% - refplane: coefficients of the reference plane of each scan
+% - celldef: the cell(grid) definition of each scan
+% output:
+% structure D 
 % data_src	{1xN} cell array of source directory names, i.e. the names extracted from the input argument sourcelst
 % scn_pos	[3xN] array of scanner coordinates (columns correspond-ing to input directories, rows corresponding to X, Y, Z re-spectively; all values in meters, as extracted from the input file specified as sourcelst)
-% ref_pln	structure containing the reference plane used for the anal-ysis; the fields are: 
+% ref_pln	structure containing the reference plane used for the analysis; the fields are: 
    % -source (file name of reference plane, i.e. the above input parameter refplane)
    % -nvec (3x1 normal vector of the plane)
    % -offset (1x1 offset such that for all points X of the plane nvec * X - offset = 0 holds)
@@ -14,25 +21,32 @@ function D = gseg_analyze_pcd_grid(sourcelst,refplane,celldef)
 % stdd2p_mm	corresponding [MxN] array of standard deviations of the orthogonal distances from the reference plane
 % ppc_dat	[MxNx6] array of best fit plane and related additional data per cell and point cloud; the data (j,k,:) refer to the best-fit plane through all points from point cloud j within the k-th directory, i.e. to a plane calculated only from the points in j.pcd within the directory D.data_src{k}; the pages contain the components of the normal vector (X, Y, Z), the offset, the number of points used for the estimation of the respective best-fit plane (i.e. the number of points within the cell from the corresponding scan), and the angle of incidence from the scanner to the center of the corresponding best fit plane in deg
 % stdloc_mm	[MxN] array of standard deviations of the orthogonal distances from the best-fit plane per cell (i.e. not using the overall reference plane)
+% Matlab Computer Vision Toolbox required
 
+%% import data
 [folders_path,stations_x,stations_y,stations_z]=textread(sourcelst,'%s%f%f%f','delimiter',',','headerlines',0);
 [ref_pln_a,ref_pln_b,ref_pln_c,ref_pln_d]=textread(refplane,'%f%f%f%f',1,'headerlines',0);
 [cells_id,cells_x_bl,cells_y_bl,cells_z_bl,cells_x_tl,cells_y_tl,cells_z_tl,cells_x_tr,cells_y_tr,cells_z_tr,cells_x_br,cells_y_br,cells_z_br]=textread(celldef,'%n%f%f%f%f%f%f%f%f%f%f%f%f','headerlines',1);
 
-m=size(cells_id,1);
-n=size(stations_x,1);
+%% basic recording
+m=size(cells_id,1);   % grid number
+n=size(stations_x,1); % scan number
+
+num_progress = ceil(m/20); % for progress bar
 
 D.data_src = folders_path';
 D.scn_pos=[stations_x stations_y stations_z]';
 D.ref_pln.source=refplane;
 D.ref_pln.nvec=[ref_pln_a; ref_pln_b; ref_pln_c];
 D.ref_pln.offset=ref_pln_d; 
-
+D.cell_def = zeros(m, 4, 3);
 cell_center = []; 
 proj_cell_center = [];
-D.cell_def = zeros(m, 4, 3);
 
-% according to the reference plane 
+%% computation with regard to the reference plane 
+fitplane_dist_thre=0.05; % maximum distance threshold for plane fitting RANSAC (m)
+
+% point projection
 for i=1:m % for each grid (cell)
     cell_i = [cells_x_bl(i) cells_y_bl(i) cells_z_bl(i); cells_x_tl(i) cells_y_tl(i) cells_z_tl(i); cells_x_tr(i) cells_y_tr(i) cells_z_tr(i);cells_x_br(i) cells_y_br(i) cells_z_br(i)];
     D.cell_def(i,:,:)= cell_i; 
@@ -46,6 +60,7 @@ proj_cell_center = proj_cell_center'; % 3*m
 D.mdc2s_m= get_mdc2s_m(D.scn_pos, proj_cell_center);  % calculate distance from scanner to grid centers
 D.aoi2p_deg= get_aoi2p_deg(D.scn_pos, proj_cell_center,D.ref_pln.nvec); % calculate the incidence angle
 
+fprintf('Progress:\n[');
 for i=1:m %for each grid
     for j=1:n %for each scanner
         cur_pc_name = [D.data_src{j} filesep int2str(i) '.pcd'];
@@ -61,7 +76,7 @@ for i=1:m %for each grid
             
             if(cur_grid_pc.Count >=3)
                 % fit the plane for each grid  (each frame's best fit plane)             
-                cur_grid_ref_pln = fit_plane_from_pts (cur_grid_pc.Location);
+                cur_grid_ref_pln = fit_plane_from_pts (cur_grid_pc.Location, fitplane_dist_thre);
                 D.ppc_dat(i,j,1:3)=cur_grid_ref_pln.nvec';
                 D.ppc_dat(i,j,4) = cur_grid_ref_pln.offset;
                 D.ppc_dat(i,j,5)=cur_grid_pc.Count;
@@ -85,6 +100,9 @@ for i=1:m %for each grid
             D.stdloc_mm(i,j) =NaN;
         end
     end
+    if(mod(i,num_progress)==0)
+        fprintf('-');
+    end
 end
-
+fprintf(']\nDone\n');
 end

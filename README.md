@@ -2,9 +2,11 @@
 
 ## simple point cloud processing tools 
 
- - [x] gseg_pcdcut: Cut a point cloud defined by a projected bounding polygon
-
- - [x] gesg_pcd2grid: Split a point cloud into several grid point clouds according to a file defining the grids
+ - [x] gseg_pcdcut: Cut a point cloud defined by a projected bounding polygon (C++)
+ 
+ - [x] gseg_pcd2grid: Split a point cloud into several grid point clouds according to a file defining the grids (C++)
+ 
+ - [x] gseg_analyze_pcd_grid: Analyze each point cloud grid with regard to the scanner and the wall (Matlab)
 
  - [ ] more to do
 ____________________________________________________________________________________
